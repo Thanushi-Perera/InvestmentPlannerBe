@@ -28,4 +28,8 @@ const server = () => {
   });
 };
 
+app.get("/",(req,res)=> {
+  res.json("hello");
+})
+
 server();
