@@ -1,4 +1,5 @@
 const SavingSchema = require("../models/SavingModel");
+const axios = require('axios');
 
 exports.addSaving = async (req, res) => {
   const { title, amount, description, category, type, date } = req.body;
@@ -82,3 +83,35 @@ exports.updateSaving = async (req, res) => {
     return res.status(500).json({ msg: "Server Error" });
   }
 };
+
+
+exports.getRecommendation = async (req, res) => {
+  try {
+    // Fetch savings data from your database
+    const savings = await SavingSchema.find().select('category amount');
+    
+    // Format the savings data as required
+    const formattedData = savings.map(saving => `('${saving.category}',${saving.amount})`).join(',');
+
+    const postData = {
+      rectype: "saving",
+      data: `[${formattedData}]`
+    };
+
+    // Log the postData before making the request
+    console.log("Post Data:", postData);
+
+    // Send POST request to the external backend
+    const response = await axios.post(
+      'https://us-central1-single-scholar-431016-j9.cloudfunctions.net/GPT_Backend', 
+      postData
+    );
+
+    // Return the response from the external service
+    res.status(200).json(response.data);
+  } catch (error) {
+    console.error("Error getting recommendation:", error);
+    res.status(500).json({ msg: "Server Error", error: error.message });
+  }
+};
+
